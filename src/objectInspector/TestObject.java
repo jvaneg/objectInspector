@@ -15,8 +15,13 @@ public class TestObject implements Serializable
 		this.letter = letter;
 	}
 	
-	private int oWaddup(int coolNUMBER) throws IOException
+	private int rich_evans(int coolNUMBER) throws IOException
 	{
 		return 1+1;
+	}
+	
+	public static String mike_stoklasa(int cool, char wow, char[] wowArray)
+	{
+		return "haha";
 	}
 }

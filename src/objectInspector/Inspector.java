@@ -13,94 +13,106 @@ public class Inspector
 	
 	public void inspect(Object obj, boolean recursive)
 	{
-		Class classObj;
+		Class classObj = obj.getClass();
 		
-		classObj = obj.getClass();
+		System.out.println(printName(classObj));
 		
-		printName(classObj);
+		System.out.println(printSuperClass(classObj));
 		
-		printSuperClass(classObj);
+		System.out.println(printInterfaces(classObj));
 		
-		printInterfaces(classObj);
-		
-		printAllMethods(classObj);
+		System.out.println(printAllMethods(classObj));
 		
 	}
 	
 	
-	private void printName(Class classObj)
+	private String printName(Class classObj)
 	{	
-		System.out.println("Class name:\t" + classObj.getSimpleName());
+		return "Class name:\t" + classObj.getSimpleName();
 	}
 	
-	private void printSuperClass(Class classObj)
+	private String printSuperClass(Class classObj)
 	{
+		String formattedString = "";
 		Class superClassObj = classObj.getSuperclass();
+		
+		formattedString += "Immediate Superclass:\t";
 		
 		if(superClassObj == null)
 		{
-			System.out.println("Immediate Superclass:\t" + "No Superclass");
+			formattedString += "No Superclass";
 		}
 		else
 		{
-			System.out.println("Immediate Superclass:\t" + superClassObj.getSimpleName());
-		}	
+			formattedString += superClassObj.getSimpleName();
+		}
+		
+		return formattedString;
 	}
 	
-	private void printInterfaces(Class classObj)
+	private String printInterfaces(Class classObj)
 	{
+		String formattedString = "";
 		Class interfaces[] = classObj.getInterfaces();
+		
+		if(interfaces.length == 1)
+		{
+			formattedString += "Interface implemented:\t";
+		}
+		else
+		{
+			formattedString += "Interfaces implemented:\t";
+		}
 		
 		if(interfaces.length == 0)
 		{
-			System.out.println("Interfaces implemented:\t" + "No Interfaces");
-		}
-		else if(interfaces.length == 1)
-		{
-			System.out.println("Interface implemented:\t" + interfaces[0].getSimpleName());
+			formattedString += "No Interfaces";
 		}
 		else
 		{
-			System.out.print("Interface implemented:\t");
-			
 			for(int i = 0; i < interfaces.length; i++)
 			{
-				System.out.print(interfaces[i].getSimpleName());
+				formattedString += interfaces[i].getSimpleName();
 				if( i < interfaces.length - 1)
 				{
-					System.out.print(", ");
+					formattedString += ", ";
 				}
 			}
 		}
+		
+		return formattedString;
 	}
 	
-	private void printAllMethods(Class classObj)
+	private String printAllMethods(Class classObj)
 	{
+		String formattedString = "";
 		Method methods[] = classObj.getDeclaredMethods();
 		
-		if(methods.length == 0)
+		if(methods.length == 1)
 		{
-			System.out.println("Declares Methods:\t" + "No methods declared");
-		}
-		else if(methods.length == 1)
-		{
-			System.out.println("Declares Methods:");
-			System.out.print("\t");
-			printMethod(methods[0]);
+			formattedString += "Declares Method:\n";
 		}
 		else
 		{
-			System.out.println("Declares Methods");
-			
+			formattedString += "Declares Methods:\n";
+		}
+		
+		if(methods.length == 0)
+		{
+			formattedString += "No methods declared";
+		}
+		else
+		{
 			for(int i = 0; i < methods.length; i++)
 			{
-				System.out.print("\t");
-				printMethod(methods[i]);
+				formattedString += "\t" + printMethod(methods[i]) + "\n";
 			}
 		}
+		
+		return formattedString;
 	}
 	
-	private void printMethod(Method methodObj)
+	private String printMethod(Method methodObj)
 	{
 		String formattedString = "";
 		int modifiers = methodObj.getModifiers();
@@ -138,7 +150,6 @@ public class Inspector
 			}
 		}
 		
-		
-		System.out.println(formattedString);
+		return formattedString;
 	}
 }
