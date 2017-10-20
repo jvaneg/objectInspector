@@ -1,5 +1,6 @@
 package objectInspector;
 
+import java.util.ArrayList;
 
 public class TestDriver
 {
@@ -7,6 +8,8 @@ public class TestDriver
     {
         Inspector inspector = new Inspector();
         TestObject testObj = new TestObject(5, 'j');
+        ArrayList<Long> intList = new ArrayList<Long>();
+        int intarr[] = new int[3];
         
         
         inspector.inspect(testObj, false);

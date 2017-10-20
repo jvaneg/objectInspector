@@ -4,6 +4,7 @@ import java.lang.reflect.*;
 
 public class Inspector
 {
+    private boolean recursive = false;
 	
 	public Inspector()
 	{
@@ -13,13 +14,20 @@ public class Inspector
 	
 	public void inspect(Object obj, boolean recursive)
 	{
+	    this.recursive = recursive;
 		Class classObj = obj.getClass();
+		String objectID;
+		String insertBefore = "| ";
 		
-		System.out.println(printName(classObj));
+		objectID = classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());
 		
-		System.out.println(printSuperClass(classObj));
+		System.out.println("============ " + objectID + " ============");
 		
-		System.out.println(printInterfaces(classObj));
+		System.out.println(insertBefore + printName(classObj));
+		
+		System.out.println(insertBefore + printSuperClass(classObj));
+		
+		System.out.println(insertBefore + printInterfaces(classObj));
 		
 		System.out.println(printAllConstructors(classObj));
 		
@@ -29,7 +37,7 @@ public class Inspector
 		
 		System.out.println(printAllFieldValues(obj));
 		
-		
+		System.out.println("==============================================");
 		
 	}
 	
@@ -365,8 +373,24 @@ public class Inspector
 		}
 		else if(objType.isArray())
 		{
-			formattedString += objType.getSimpleName() + " " + fieldObj.getName() + " =";
-			System.out.println("WE ARRAY");
+		    try
+		    {
+    		    if(!fieldObj.isAccessible())
+                {
+                    fieldObj.setAccessible(true);
+                    formattedString += printArray(objType, fieldObj, fieldObj.get(obj));
+                    fieldObj.setAccessible(false);
+                }
+                else
+                {
+                    formattedString += printArray(objType, fieldObj, fieldObj.get(obj));
+                }
+		    }
+		    catch(Exception e)
+            {
+                //TODO deal with me in a better way
+                e.printStackTrace();
+            }
 		}
 		else
 		{
@@ -377,12 +401,26 @@ public class Inspector
 				if(!fieldObj.isAccessible())
 				{
 					fieldObj.setAccessible(true);
-					formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
+					if(fieldObj.get(obj) != null)
+					{
+					    formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
+					}
+					else
+					{
+					    formattedString += " " + null;
+					}
 					fieldObj.setAccessible(false);
 				}
 				else
 				{
-					formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
+				    if(fieldObj.get(obj) != null)
+                    {
+                        formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
+                    }
+                    else
+                    {
+                        formattedString += " " + null;
+                    }
 				}
 			}
 			catch(Exception e)
@@ -396,10 +434,74 @@ public class Inspector
 	}
 	
 	
+	private String printArray(Class objType, Field fieldObj, Object arrayObj)
+	{
+	    String formattedString = "";
+	    String arrayType = objType.getSimpleName();
+	    String arrayTypeFront;
+	    String arrayTypeEnd;
+        int arrayLength = Array.getLength(arrayObj);
+        Object arrayContent;
+        Class arrayContentClass;
+        
+        arrayTypeFront = arrayType.substring(0, arrayType.indexOf('['));
+        arrayTypeEnd = arrayType.substring(arrayType.indexOf('[') + 2, arrayType.length());
+        arrayType = arrayTypeFront + "[" + arrayLength + "]" + arrayTypeEnd;
+        formattedString += arrayType + " " + fieldObj.getName() + " = ";
+        
+        formattedString += "[";
+        for(int i = 0; i < arrayLength; i++)
+        {
+            arrayContent = Array.get(arrayObj, i);
+            
+            if(arrayContent != null)
+            {
+                arrayContentClass = arrayContent.getClass();
+                
+                if(isPrimitiveWrapper(arrayContentClass))
+                {
+                    formattedString += arrayContent;
+                }
+                else if(arrayContentClass.isArray())
+                {
+                    //TODO put into my queue
+                    formattedString += arrayContentClass.getSimpleName() + "@" + Integer.toHexString(arrayObj.hashCode());   
+                }
+                else
+                {
+                    //TODO if recursive push into queue
+                    formattedString += arrayContentClass.getSimpleName() + "@" + Integer.toHexString(arrayObj.hashCode());
+                }
+            }
+            else
+            {
+                formattedString += null;
+            }
+            
+            if( i < arrayLength - 1)
+            {
+                formattedString += ", ";
+            }
+        }
+        formattedString += "]";
+	    
+	    
+	    return formattedString;
+	}
 	
 	
-	
-	
+	private boolean isPrimitiveWrapper(Class classObj)
+	{
+	    return( classObj == Boolean.class ||
+	            classObj == Character.class ||
+    	        classObj == Byte.class ||
+    	        classObj == Short.class || 
+    	        classObj == Integer.class || 
+    	        classObj == Long.class || 
+    	        classObj == Float.class || 
+    	        classObj == Double.class || 
+    	        classObj == Void.class );
+	}
 	
 	
 	
