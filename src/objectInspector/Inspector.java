@@ -1,10 +1,15 @@
 package objectInspector;
 
 import java.lang.reflect.*;
+import java.util.AbstractMap;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Inspector
 {
     private boolean recursive = false;
+    private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> superQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
+    private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> interfaceQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
 	
 	public Inspector()
 	{
@@ -18,6 +23,9 @@ public class Inspector
 		Class classObj = obj.getClass();
 		String objectID;
 		String insertBefore = "| ";
+		AbstractMap.SimpleImmutableEntry<Class, Object> superPair;
+		AbstractMap.SimpleImmutableEntry<Class, Object> interfacePair;
+		
 		
 		objectID = classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());
 		
@@ -25,17 +33,63 @@ public class Inspector
 		
 		System.out.println(insertBefore + printName(classObj));
 		
-		System.out.println(insertBefore + printSuperClass(classObj));
+		System.out.println(insertBefore + printSuperClass(classObj, obj));
 		
-		System.out.println(insertBefore + printInterfaces(classObj));
+		System.out.println(insertBefore + printInterfaces(classObj, obj));
 		
-		System.out.println(printAllConstructors(classObj));
+		System.out.println(printAllConstructors(classObj, insertBefore));
 		
-		System.out.println(printAllMethods(classObj));
+		System.out.println(printAllMethods(classObj, insertBefore));
 		
-		System.out.println(printAllFields(classObj));
+		System.out.println(printAllFields(classObj, insertBefore));
 		
-		System.out.println(printAllFieldValues(obj));
+		System.out.println(printAllFieldValues(classObj, obj, insertBefore));
+		
+		System.out.println( insertBefore + "========= Superclass of " + objectID + " ==========");
+		
+		while(!superQueue.isEmpty())
+		{
+		    superPair = superQueue.remove();
+		    classObj = superPair.getKey();
+		    obj = superPair.getValue();
+		    
+		    System.out.println(insertBefore + printName(classObj));
+	        
+	        System.out.println(insertBefore + printSuperClass(classObj, obj));
+	        
+	        System.out.println(insertBefore + printInterfaces(classObj, obj));
+	        
+	        System.out.println(printAllConstructors(classObj, insertBefore));
+	        
+	        System.out.println(printAllMethods(classObj, insertBefore));
+	        
+	        System.out.println(printAllFields(classObj, insertBefore));
+	        
+	        System.out.println(printAllFieldValues(classObj, obj, insertBefore));
+		}
+		
+		System.out.println( insertBefore + "========= Interfaces of " + objectID + " ==========");
+		
+		while(!interfaceQueue.isEmpty())
+		{
+		    interfacePair = interfaceQueue.remove();
+            classObj = interfacePair.getKey();
+            obj = interfacePair.getValue();
+            
+            System.out.println(insertBefore + printName(classObj));
+            
+            System.out.println(insertBefore + printSuperClass(classObj, obj));
+            
+            System.out.println(insertBefore + printInterfaces(classObj, obj));
+            
+            System.out.println(printAllConstructors(classObj, insertBefore));
+            
+            System.out.println(printAllMethods(classObj, insertBefore));
+            
+            System.out.println(printAllFields(classObj, insertBefore));
+            
+            System.out.println(printAllFieldValues(classObj, obj, insertBefore));
+		}
 		
 		System.out.println("==============================================");
 		
@@ -47,7 +101,7 @@ public class Inspector
 		return "Class name:\t" + classObj.getSimpleName();
 	}
 	
-	private String printSuperClass(Class classObj)
+	private String printSuperClass(Class classObj, Object obj)
 	{
 		String formattedString = "";
 		Class superClassObj = classObj.getSuperclass();
@@ -61,12 +115,13 @@ public class Inspector
 		else
 		{
 			formattedString += superClassObj.getSimpleName();
+			superQueue.add(new AbstractMap.SimpleImmutableEntry<>(superClassObj, obj));
 		}
 		
 		return formattedString;
 	}
 	
-	private String printInterfaces(Class classObj)
+	private String printInterfaces(Class classObj, Object obj)
 	{
 		String formattedString = "";
 		Class interfaces[] = classObj.getInterfaces();
@@ -89,6 +144,7 @@ public class Inspector
 			for(int i = 0; i < interfaces.length; i++)
 			{
 				formattedString += interfaces[i].getSimpleName();
+				interfaceQueue.add(new AbstractMap.SimpleImmutableEntry<>(interfaces[i], obj));
 				if( i < interfaces.length - 1)
 				{
 					formattedString += ", ";
@@ -99,23 +155,23 @@ public class Inspector
 		return formattedString;
 	}
 	
-	private String printAllMethods(Class classObj)
+	private String printAllMethods(Class classObj, String insertBefore)
 	{
-		String formattedString = "";
+		String formattedString = insertBefore;
 		Method methods[] = classObj.getDeclaredMethods();
 		
 		if(methods.length == 1)
 		{
-			formattedString += "Method:\n";
+			formattedString += "Method:\n" + insertBefore;
 		}
 		else
 		{
-			formattedString += "Methods:\n";
+			formattedString += "Methods:\n" + insertBefore;
 		}
 		
 		if(methods.length == 0)
 		{
-			formattedString += "No methods declared";
+			formattedString += "\tNo methods declared";
 		}
 		else
 		{
@@ -124,7 +180,7 @@ public class Inspector
 				formattedString += "\t" + printMethod(methods[i]);
 				if( i < methods.length - 1)
 				{
-					formattedString += "\n";
+					formattedString += "\n" + insertBefore;
 				}
 			}
 		}
@@ -173,23 +229,23 @@ public class Inspector
 		return formattedString;
 	}
 	
-	private String printAllConstructors(Class classObj)
+	private String printAllConstructors(Class classObj, String insertBefore)
 	{
-		String formattedString = "";
+		String formattedString = insertBefore;
 		Constructor constructors[] = classObj.getConstructors();
 		
 		if(constructors.length == 1)
 		{
-			formattedString += "Constructor:\n";
+			formattedString += "Constructor:\n" + insertBefore;
 		}
 		else
 		{
-			formattedString += "Constructors:\n";
+			formattedString += "Constructors:\n" + insertBefore;
 		}
 		
 		if(constructors.length == 0)
 		{
-			formattedString += "No constructors declared";
+			formattedString += "\tNo constructors declared";
 		}
 		else
 		{
@@ -198,7 +254,7 @@ public class Inspector
 				formattedString += "\t" + printConstructor(constructors[i]);
 				if( i < constructors.length - 1)
 				{
-					formattedString += "\n";
+					formattedString += "\n" + insertBefore;
 				}
 			}
 		}
@@ -251,23 +307,23 @@ public class Inspector
 		return formattedString;
 	}
 	
-	private String printAllFields(Class classObj)
+	private String printAllFields(Class classObj, String insertBefore)
 	{
-		String formattedString = "";
+		String formattedString = insertBefore;
 		Field fields[] = classObj.getDeclaredFields();
 		
 		if(fields.length == 1)
 		{
-			formattedString += "Field:\n";
+			formattedString += "Field:\n" + insertBefore;
 		}
 		else
 		{
-			formattedString += "Fields:\n";
+			formattedString += "Fields:\n" + insertBefore;
 		}
 		
 		if(fields.length == 0)
 		{
-			formattedString += "No fields declared";
+			formattedString += "\tNo fields declared";
 		}
 		else
 		{
@@ -276,7 +332,7 @@ public class Inspector
 				formattedString += "\t" + printField(fields[i]);
 				if( i < fields.length - 1)
 				{
-					formattedString += "\n";
+					formattedString += "\n" + insertBefore;
 				}
 			}
 		}
@@ -300,24 +356,24 @@ public class Inspector
 		return formattedString;
 	}
 	
-	private String printAllFieldValues(Object obj)
+	private String printAllFieldValues(Class classObj, Object obj, String insertBefore)
 	{
-		String formattedString = "";
-		Class classObj = obj.getClass();
+		String formattedString = insertBefore;
+		//Class classObj = obj.getClass();
 		Field fields[] = classObj.getDeclaredFields();
 		
 		if(fields.length == 1)
 		{
-			formattedString += "Current Field Value:\n";
+			formattedString += "Current Field Value:\n" + insertBefore;
 		}
 		else
 		{
-			formattedString += "Current Field Values:\n";
+			formattedString += "Current Field Values:\n" + insertBefore;
 		}
 		
 		if(fields.length == 0)
 		{
-			formattedString += "No fields declared";
+			formattedString += "\tNo fields declared";
 		}
 		else
 		{
@@ -326,7 +382,7 @@ public class Inspector
 				formattedString += "\t" + printFieldValue(fields[i], obj);
 				if( i < fields.length - 1)
 				{
-					formattedString += "\n";
+					formattedString += "\n" + insertBefore;
 				}
 			}
 		}
