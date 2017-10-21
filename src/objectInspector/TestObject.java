@@ -11,6 +11,7 @@ public class TestObject implements Serializable
 	public double[] array = {1, 2, 3, 4, 5};
 	public int[][] arr2 = new int[3][2];
 	public final Socket socket = null;
+	public final Socket socket2 = new Socket();
 	private Socket[] socketArr = new Socket[2];
 	
 	

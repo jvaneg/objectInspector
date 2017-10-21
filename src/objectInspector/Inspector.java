@@ -2,6 +2,7 @@ package objectInspector;
 
 import java.lang.reflect.*;
 import java.util.AbstractMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -10,6 +11,9 @@ public class Inspector
     private boolean recursive = false;
     private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> superQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
     private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> interfaceQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
+    private Queue<Object> objectQueue = new LinkedList<Object>();
+    private HashSet<Class> seenInterfaces = new HashSet<Class>();
+    private HashSet<Object> seenObjects = new HashSet<Object>();
 	
 	public Inspector()
 	{
@@ -20,85 +24,93 @@ public class Inspector
 	public void inspect(Object obj, boolean recursive)
 	{
 	    this.recursive = recursive;
-		Class classObj = obj.getClass();
+		Class classObj;
 		String objectID;
-		String insertBefore = "| ";
+		String insertBefore;
 		AbstractMap.SimpleImmutableEntry<Class, Object> superPair;
 		AbstractMap.SimpleImmutableEntry<Class, Object> interfacePair;
 		
+		objectQueue.add(obj);
+		seenObjects.add(obj);
 		
-		objectID = classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());
-		
-		System.out.println("============ " + objectID + " ============");
-		
+		while(!objectQueue.isEmpty())
+		{
+			obj = objectQueue.remove();
+			classObj = obj.getClass();
+			
+			insertBefore = "| ";
+			
+			objectID = classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());
+			
+			System.out.println("=============== " + objectID + " ===============");
+			
+			if(classObj.isArray())
+			{
+				printArrayInfo(classObj, obj, insertBefore);
+			}
+			else
+			{
+				printObjectInfo(classObj, obj, insertBefore);
+				System.out.println(insertBefore);
+				
+				if(!superQueue.isEmpty())
+				{
+					System.out.println( insertBefore + "========= Superclass Hierarchy of " + objectID + " ==========");
+					
+					insertBefore += "| ";
+					
+					while(!superQueue.isEmpty())
+					{
+					    superPair = superQueue.remove();
+					    printObjectInfo(superPair.getKey(), superPair.getValue(), insertBefore);
+					    System.out.println(insertBefore);
+					}
+				}
+				
+				if(!interfaceQueue.isEmpty())
+				{
+					insertBefore = "| ";
+					System.out.println( insertBefore + "============== Interfaces of " + objectID + " ===============");
+					insertBefore += "| ";
+					
+					seenInterfaces.clear();
+				
+					while(!interfaceQueue.isEmpty())
+					{
+					    interfacePair = interfaceQueue.remove();
+					    printObjectInfo(interfacePair.getKey(), interfacePair.getValue(), insertBefore);
+					    System.out.println(insertBefore);
+					}
+				}
+			}
+			
+			System.out.println("====================================================\n");
+		}
+	}
+	
+	private void printObjectInfo(Class classObj, Object obj, String insertBefore)
+	{
+		System.out.println(insertBefore + "------------------------------------------------");
 		System.out.println(insertBefore + printName(classObj));
-		
-		System.out.println(insertBefore + printSuperClass(classObj, obj));
-		
-		System.out.println(insertBefore + printInterfaces(classObj, obj));
-		
-		System.out.println(printAllConstructors(classObj, insertBefore));
-		
-		System.out.println(printAllMethods(classObj, insertBefore));
-		
-		System.out.println(printAllFields(classObj, insertBefore));
-		
-		System.out.println(printAllFieldValues(classObj, obj, insertBefore));
-		
-		System.out.println( insertBefore + "========= Superclass of " + objectID + " ==========");
-		
-		while(!superQueue.isEmpty())
-		{
-		    superPair = superQueue.remove();
-		    classObj = superPair.getKey();
-		    obj = superPair.getValue();
-		    
-		    System.out.println(insertBefore + printName(classObj));
-	        
-	        System.out.println(insertBefore + printSuperClass(classObj, obj));
-	        
-	        System.out.println(insertBefore + printInterfaces(classObj, obj));
-	        
-	        System.out.println(printAllConstructors(classObj, insertBefore));
-	        
-	        System.out.println(printAllMethods(classObj, insertBefore));
-	        
-	        System.out.println(printAllFields(classObj, insertBefore));
-	        
-	        System.out.println(printAllFieldValues(classObj, obj, insertBefore));
-		}
-		
-		System.out.println( insertBefore + "========= Interfaces of " + objectID + " ==========");
-		
-		while(!interfaceQueue.isEmpty())
-		{
-		    interfacePair = interfaceQueue.remove();
-            classObj = interfacePair.getKey();
-            obj = interfacePair.getValue();
-            
-            System.out.println(insertBefore + printName(classObj));
-            
-            System.out.println(insertBefore + printSuperClass(classObj, obj));
-            
-            System.out.println(insertBefore + printInterfaces(classObj, obj));
-            
-            System.out.println(printAllConstructors(classObj, insertBefore));
-            
-            System.out.println(printAllMethods(classObj, insertBefore));
-            
-            System.out.println(printAllFields(classObj, insertBefore));
-            
-            System.out.println(printAllFieldValues(classObj, obj, insertBefore));
-		}
-		
-		System.out.println("==============================================");
-		
+        System.out.println(insertBefore + printSuperClass(classObj, obj));
+        System.out.println(insertBefore + printInterfaces(classObj, obj));
+        System.out.println(printAllConstructors(classObj, insertBefore));
+        System.out.println(printAllMethods(classObj, insertBefore));
+        System.out.println(printAllFields(classObj, insertBefore)); 
+        System.out.println(printAllFieldValues(classObj, obj, insertBefore));
+        System.out.println(insertBefore + "------------------------------------------------");
+	}
+	
+	private void printArrayInfo(Class classObj, Object arrayObj, String insertBefore)
+	{
+		System.out.print(insertBefore + "Array contents:\n" + insertBefore);
+		System.out.println("\t" + printArray(classObj, null, arrayObj));
 	}
 	
 	
 	private String printName(Class classObj)
 	{	
-		return "Class name:\t" + classObj.getSimpleName();
+		return "Class name:  " + classObj.getSimpleName();
 	}
 	
 	private String printSuperClass(Class classObj, Object obj)
@@ -106,7 +118,7 @@ public class Inspector
 		String formattedString = "";
 		Class superClassObj = classObj.getSuperclass();
 		
-		formattedString += "Immediate Superclass:\t";
+		formattedString += "Immediate Superclass:  ";
 		
 		if(superClassObj == null)
 		{
@@ -128,11 +140,11 @@ public class Inspector
 		
 		if(interfaces.length == 1)
 		{
-			formattedString += "Interface implemented:\t";
+			formattedString += "Interface implemented:  ";
 		}
 		else
 		{
-			formattedString += "Interfaces implemented:\t";
+			formattedString += "Interfaces implemented:  ";
 		}
 		
 		if(interfaces.length == 0)
@@ -144,7 +156,13 @@ public class Inspector
 			for(int i = 0; i < interfaces.length; i++)
 			{
 				formattedString += interfaces[i].getSimpleName();
-				interfaceQueue.add(new AbstractMap.SimpleImmutableEntry<>(interfaces[i], obj));
+				
+				if(!seenInterfaces.contains(interfaces[i]))
+				{
+					interfaceQueue.add(new AbstractMap.SimpleImmutableEntry<>(interfaces[i], obj));
+					seenInterfaces.add(interfaces[i]);
+				}
+				
 				if( i < interfaces.length - 1)
 				{
 					formattedString += ", ";
@@ -359,7 +377,6 @@ public class Inspector
 	private String printAllFieldValues(Class classObj, Object obj, String insertBefore)
 	{
 		String formattedString = insertBefore;
-		//Class classObj = obj.getClass();
 		Field fields[] = classObj.getDeclaredFields();
 		
 		if(fields.length == 1)
@@ -402,8 +419,6 @@ public class Inspector
 			formattedString += Modifier.toString(modifiers) + " ";
 		}
 		
-		
-		//formattedString += "\t\t";
 		
 		if(objType.isPrimitive())
 		{
@@ -459,6 +474,14 @@ public class Inspector
 					fieldObj.setAccessible(true);
 					if(fieldObj.get(obj) != null)
 					{
+						if(this.recursive)
+						{
+							if(!seenObjects.contains(fieldObj.get(obj)))
+							{
+								objectQueue.add(fieldObj.get(obj));
+								seenObjects.add(fieldObj.get(obj));
+							}
+						}
 					    formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
 					}
 					else
@@ -471,6 +494,14 @@ public class Inspector
 				{
 				    if(fieldObj.get(obj) != null)
                     {
+				    	if(this.recursive)
+				    	{
+					    	if(!seenObjects.contains(fieldObj.get(obj)))
+							{
+								objectQueue.add(fieldObj.get(obj));
+								seenObjects.add(fieldObj.get(obj));
+							}
+				    	}
                         formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
                     }
                     else
@@ -503,7 +534,12 @@ public class Inspector
         arrayTypeFront = arrayType.substring(0, arrayType.indexOf('['));
         arrayTypeEnd = arrayType.substring(arrayType.indexOf('[') + 2, arrayType.length());
         arrayType = arrayTypeFront + "[" + arrayLength + "]" + arrayTypeEnd;
-        formattedString += arrayType + " " + fieldObj.getName() + " = ";
+        formattedString += arrayType;
+        if(fieldObj != null)
+        {
+        	formattedString += " " + fieldObj.getName();
+        }
+        formattedString += " = ";
         
         formattedString += "[";
         for(int i = 0; i < arrayLength; i++)
@@ -520,12 +556,23 @@ public class Inspector
                 }
                 else if(arrayContentClass.isArray())
                 {
-                    //TODO put into my queue
+                	if(!seenObjects.contains(arrayContent))
+					{
+						objectQueue.add(arrayContent);
+						seenObjects.add(arrayContent);
+					}
                     formattedString += arrayContentClass.getSimpleName() + "@" + Integer.toHexString(arrayObj.hashCode());   
                 }
                 else
                 {
-                    //TODO if recursive push into queue
+                	if(this.recursive)
+					{
+						if(!seenObjects.contains(arrayContent))
+						{
+							objectQueue.add(arrayContent);
+							seenObjects.add(arrayContent);
+						}
+					}
                     formattedString += arrayContentClass.getSimpleName() + "@" + Integer.toHexString(arrayObj.hashCode());
                 }
             }
