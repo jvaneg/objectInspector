@@ -10,6 +10,10 @@ public class Inspector
 {	
 	private static final int DIVIDER_LENGTH = 80;
 	private static final int SUBDIVIDER_LENGTH = 70;
+	private static final char DIVIDER_CHAR = '=';
+	private static final char SUBDIVIDER_CHAR = '-';
+	private static final String INDENT_STRING = "| ";
+	private static final int NO_MODIFIERS = 0;
 	
     private boolean recursive = false;
     private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> superQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
@@ -18,7 +22,7 @@ public class Inspector
     private Queue<Object> objectQueue = new LinkedList<Object>();
     private HashSet<Class> seenInterfaces = new HashSet<Class>();
     private HashSet<Object> seenObjects = new HashSet<Object>();
-    private String insertBefore = "| "; //TODO make this a constant
+    private String insertBefore = INDENT_STRING;
 	
 	public Inspector()
 	{
@@ -31,7 +35,6 @@ public class Inspector
 	    this.recursive = recursive;
 		Class classObj;
 		String objectID;
-		//String insertBefore;
 		AbstractMap.SimpleImmutableEntry<Class, Object> superPair;
 		AbstractMap.SimpleImmutableEntry<Class, Object> interfacePair;
 		AbstractMap.SimpleImmutableEntry<Object, Object> objectFoundInPair;
@@ -62,7 +65,8 @@ public class Inspector
 				
 				if(!superQueue.isEmpty())
 				{
-					System.out.println(generateDividerLine('=', DIVIDER_LENGTH, ("Superclass Hierarchy of " + objectID)));
+					System.out.println(insertBefore + generateDividerLine(DIVIDER_CHAR, DIVIDER_LENGTH - insertBefore.length(),
+																		 	("Superclass Hierarchy of " + objectID)));
 					
 					indentIncrease();
 					
@@ -78,7 +82,8 @@ public class Inspector
 				
 				if(!interfaceQueue.isEmpty())
 				{
-					System.out.println(generateDividerLine('=', DIVIDER_LENGTH, ("Interfaces of " + objectID)));
+					System.out.println(insertBefore + generateDividerLine(DIVIDER_CHAR, DIVIDER_LENGTH - insertBefore.length(),
+																			("Interfaces of " + objectID)));
 					
 					indentIncrease();
 					seenInterfaces.clear();
@@ -94,14 +99,13 @@ public class Inspector
 				}
 			}
 		
-			System.out.println(generateDividerLine('=', DIVIDER_LENGTH, "") + "\n");
+			System.out.println(generateDividerLine(DIVIDER_CHAR, DIVIDER_LENGTH, "") + "\n\n");
 		}
 	}
 	
 	private void printObjectInfo(Class classObj, Object obj, String insertBefore)
 	{
-		//System.out.println(insertBefore + "------------------------------------------------");
-		System.out.println(insertBefore + generateDividerLine('-', SUBDIVIDER_LENGTH, ""));
+		System.out.println(insertBefore + generateDividerLine(SUBDIVIDER_CHAR, SUBDIVIDER_LENGTH - insertBefore.length(), ""));
 		System.out.println(insertBefore + printName(classObj));
         System.out.println(insertBefore + printSuperClass(classObj, obj));
         System.out.println(insertBefore + printInterfaces(classObj, obj));
@@ -109,8 +113,7 @@ public class Inspector
         System.out.println(printAllMethods(classObj, insertBefore));
         System.out.println(printAllFields(classObj, insertBefore)); 
         System.out.println(printAllFieldValues(classObj, obj, insertBefore));
-        //System.out.println(insertBefore + "------------------------------------------------");
-        System.out.println(insertBefore + generateDividerLine('-', SUBDIVIDER_LENGTH, ""));
+        System.out.println(insertBefore + generateDividerLine(SUBDIVIDER_CHAR, SUBDIVIDER_LENGTH - insertBefore.length(), ""));
 	}
 	
 	private void printArrayInfo(Class classObj, Object arrayObj, String insertBefore)
@@ -284,7 +287,7 @@ public class Inspector
 		Class parameters[] = methodObj.getParameterTypes();
 		Class exceptions[] = methodObj.getExceptionTypes();
 		
-		if(modifiers > 0) //TODO replace constant
+		if(modifiers > NO_MODIFIERS)
 		{
 			formattedString += Modifier.toString(modifiers) + " ";
 		}
@@ -360,7 +363,7 @@ public class Inspector
 		Class parameters[] = constructorObj.getParameterTypes();
 		Class exceptions[] = constructorObj.getExceptionTypes();
 		
-		if(modifiers > 0) //TODO replace constant
+		if(modifiers > NO_MODIFIERS)
 		{
 			formattedString += Modifier.toString(modifiers) + " ";
 		}
@@ -435,7 +438,7 @@ public class Inspector
 		
 		int modifiers = fieldObj.getModifiers();
 		
-		if(modifiers > 0) //TODO replace constant
+		if(modifiers > NO_MODIFIERS)
 		{
 			formattedString += Modifier.toString(modifiers) + " ";
 		}
@@ -485,7 +488,7 @@ public class Inspector
 		int modifiers = fieldObj.getModifiers();
 		Class objType = fieldObj.getType();
 		
-		if(modifiers > 0) //TODO replace constant
+		if(modifiers > NO_MODIFIERS)
 		{
 			formattedString += Modifier.toString(modifiers) + " ";
 		}
@@ -509,8 +512,7 @@ public class Inspector
 			}
 			catch(Exception e)
 			{
-				//TODO deal with me in a better way
-				e.printStackTrace();
+				System.err.println("Error getting field value!");
 			}
 		}
 		else if(objType.isArray())
@@ -530,14 +532,12 @@ public class Inspector
 		    }
 		    catch(Exception e)
             {
-                //TODO deal with me in a better way
-                e.printStackTrace();
+		    	System.err.println("Error getting field value!");
             }
 		}
 		else
 		{
 			formattedString += objType.getSimpleName() + " " + fieldObj.getName() + " =";
-			//FANCIER STUFF FOR THE RECURSION PART
 			try
 			{
 				if(!fieldObj.isAccessible())
@@ -583,8 +583,7 @@ public class Inspector
 			}
 			catch(Exception e)
 			{
-				//TODO deal with me in a better way
-				e.printStackTrace();
+				System.err.println("Error getting field value!");
 			}
 		}
 		
@@ -632,7 +631,7 @@ public class Inspector
 						objectQueue.add(arrayContent);
 						seenObjects.add(arrayContent);
 					}
-                	formattedString += generateObjectID(arrayObj);
+                	formattedString += generateObjectID(arrayContent);
                 }
                 else
                 {
@@ -644,7 +643,7 @@ public class Inspector
 							seenObjects.add(arrayContent);
 						}
 					}
-                	formattedString += generateObjectID(arrayObj);
+                	formattedString += generateObjectID(arrayContent);
                 }
             }
             else
