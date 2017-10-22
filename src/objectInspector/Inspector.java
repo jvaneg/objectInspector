@@ -14,6 +14,7 @@ public class Inspector
     private Queue<Object> objectQueue = new LinkedList<Object>();
     private HashSet<Class> seenInterfaces = new HashSet<Class>();
     private HashSet<Object> seenObjects = new HashSet<Object>();
+    private String insertBefore = "| ";
 	
 	public Inspector()
 	{
@@ -26,7 +27,7 @@ public class Inspector
 	    this.recursive = recursive;
 		Class classObj;
 		String objectID;
-		String insertBefore;
+		//String insertBefore;
 		AbstractMap.SimpleImmutableEntry<Class, Object> superPair;
 		AbstractMap.SimpleImmutableEntry<Class, Object> interfacePair;
 		
@@ -38,7 +39,7 @@ public class Inspector
 			obj = objectQueue.remove();
 			classObj = obj.getClass();
 			
-			insertBefore = "| ";
+			//insertBefore = "| ";
 			
 			objectID = generateObjectID(obj);
 			
@@ -57,7 +58,8 @@ public class Inspector
 				{
 					System.out.println( insertBefore + "========= Superclass Hierarchy of " + objectID + " ==========");
 					
-					insertBefore += "| ";
+					//insertBefore += "| ";
+					indentIncrease();
 					
 					while(!superQueue.isEmpty())
 					{
@@ -65,13 +67,15 @@ public class Inspector
 					    printObjectInfo(superPair.getKey(), superPair.getValue(), insertBefore);
 					    System.out.println(insertBefore);
 					}
+					
+					indentDecrease();
 				}
 				
 				if(!interfaceQueue.isEmpty())
 				{
-					insertBefore = "| ";
 					System.out.println( insertBefore + "============== Interfaces of " + objectID + " ===============");
-					insertBefore += "| ";
+					
+					indentIncrease();
 					
 					seenInterfaces.clear();
 				
@@ -81,6 +85,8 @@ public class Inspector
 					    printObjectInfo(interfacePair.getKey(), interfacePair.getValue(), insertBefore);
 					    System.out.println(insertBefore);
 					}
+					
+					indentDecrease();
 				}
 			}
 			
@@ -111,6 +117,19 @@ public class Inspector
 	{
 		Class classObj = obj.getClass();
 		return classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());	
+	}
+	
+	private void indentIncrease()
+	{
+		insertBefore += "| ";
+	}
+	
+	private void indentDecrease()
+	{
+		if(this.insertBefore.length() > 2)
+		{
+			insertBefore = insertBefore.substring(0, insertBefore.length() - 2);
+		}
 	}
 	
 	
