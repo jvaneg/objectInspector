@@ -40,7 +40,7 @@ public class Inspector
 			
 			insertBefore = "| ";
 			
-			objectID = classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());
+			objectID = generateObjectID(obj);
 			
 			System.out.println("=============== " + objectID + " ===============");
 			
@@ -105,6 +105,12 @@ public class Inspector
 	{
 		System.out.print(insertBefore + "Array contents:\n" + insertBefore);
 		System.out.println("\t" + printArray(classObj, null, arrayObj));
+	}
+	
+	private String generateObjectID(Object obj)
+	{
+		Class classObj = obj.getClass();
+		return classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());	
 	}
 	
 	
@@ -482,7 +488,7 @@ public class Inspector
 								seenObjects.add(fieldObj.get(obj));
 							}
 						}
-					    formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
+						formattedString += " " + generateObjectID(fieldObj.get(obj));
 					}
 					else
 					{
@@ -502,7 +508,7 @@ public class Inspector
 								seenObjects.add(fieldObj.get(obj));
 							}
 				    	}
-                        formattedString += " " + objType.getSimpleName() + "@" + Integer.toHexString(fieldObj.get(obj).hashCode());
+				    	formattedString += " " + generateObjectID(fieldObj.get(obj));
                     }
                     else
                     {
@@ -561,7 +567,7 @@ public class Inspector
 						objectQueue.add(arrayContent);
 						seenObjects.add(arrayContent);
 					}
-                    formattedString += arrayContentClass.getSimpleName() + "@" + Integer.toHexString(arrayObj.hashCode());   
+                	formattedString += generateObjectID(arrayObj);
                 }
                 else
                 {
@@ -573,7 +579,7 @@ public class Inspector
 							seenObjects.add(arrayContent);
 						}
 					}
-                    formattedString += arrayContentClass.getSimpleName() + "@" + Integer.toHexString(arrayObj.hashCode());
+                	formattedString += generateObjectID(arrayObj);
                 }
             }
             else
