@@ -7,14 +7,18 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Inspector
-{
+{	
+	private static final int DIVIDER_LENGTH = 80;
+	private static final int SUBDIVIDER_LENGTH = 70;
+	
     private boolean recursive = false;
     private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> superQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
     private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> interfaceQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
+    private Queue<AbstractMap.SimpleImmutableEntry<Object, Object>> newobjectQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Object, Object>>();
     private Queue<Object> objectQueue = new LinkedList<Object>();
     private HashSet<Class> seenInterfaces = new HashSet<Class>();
     private HashSet<Object> seenObjects = new HashSet<Object>();
-    private String insertBefore = "| ";
+    private String insertBefore = "| "; //TODO make this a constant
 	
 	public Inspector()
 	{
@@ -30,8 +34,11 @@ public class Inspector
 		//String insertBefore;
 		AbstractMap.SimpleImmutableEntry<Class, Object> superPair;
 		AbstractMap.SimpleImmutableEntry<Class, Object> interfacePair;
+		AbstractMap.SimpleImmutableEntry<Object, Object> objectFoundInPair;
 		
 		objectQueue.add(obj);
+		newobjectQueue.add(new AbstractMap.SimpleImmutableEntry<>(obj, null));
+		
 		seenObjects.add(obj);
 		
 		while(!objectQueue.isEmpty())
@@ -39,11 +46,10 @@ public class Inspector
 			obj = objectQueue.remove();
 			classObj = obj.getClass();
 			
-			//insertBefore = "| ";
 			
 			objectID = generateObjectID(obj);
 			
-			System.out.println("=============== " + objectID + " ===============");
+			System.out.println(generateDividerLine('=', DIVIDER_LENGTH, objectID));
 			
 			if(classObj.isArray())
 			{
@@ -56,9 +62,8 @@ public class Inspector
 				
 				if(!superQueue.isEmpty())
 				{
-					System.out.println( insertBefore + "========= Superclass Hierarchy of " + objectID + " ==========");
+					System.out.println(generateDividerLine('=', DIVIDER_LENGTH, ("Superclass Hierarchy of " + objectID)));
 					
-					//insertBefore += "| ";
 					indentIncrease();
 					
 					while(!superQueue.isEmpty())
@@ -73,10 +78,9 @@ public class Inspector
 				
 				if(!interfaceQueue.isEmpty())
 				{
-					System.out.println( insertBefore + "============== Interfaces of " + objectID + " ===============");
+					System.out.println(generateDividerLine('=', DIVIDER_LENGTH, ("Interfaces of " + objectID)));
 					
 					indentIncrease();
-					
 					seenInterfaces.clear();
 				
 					while(!interfaceQueue.isEmpty())
@@ -89,14 +93,15 @@ public class Inspector
 					indentDecrease();
 				}
 			}
-			
-			System.out.println("====================================================\n");
+		
+			System.out.println(generateDividerLine('=', DIVIDER_LENGTH, "") + "\n");
 		}
 	}
 	
 	private void printObjectInfo(Class classObj, Object obj, String insertBefore)
 	{
-		System.out.println(insertBefore + "------------------------------------------------");
+		//System.out.println(insertBefore + "------------------------------------------------");
+		System.out.println(insertBefore + generateDividerLine('-', SUBDIVIDER_LENGTH, ""));
 		System.out.println(insertBefore + printName(classObj));
         System.out.println(insertBefore + printSuperClass(classObj, obj));
         System.out.println(insertBefore + printInterfaces(classObj, obj));
@@ -104,7 +109,8 @@ public class Inspector
         System.out.println(printAllMethods(classObj, insertBefore));
         System.out.println(printAllFields(classObj, insertBefore)); 
         System.out.println(printAllFieldValues(classObj, obj, insertBefore));
-        System.out.println(insertBefore + "------------------------------------------------");
+        //System.out.println(insertBefore + "------------------------------------------------");
+        System.out.println(insertBefore + generateDividerLine('-', SUBDIVIDER_LENGTH, ""));
 	}
 	
 	private void printArrayInfo(Class classObj, Object arrayObj, String insertBefore)
@@ -130,6 +136,46 @@ public class Inspector
 		{
 			insertBefore = insertBefore.substring(0, insertBefore.length() - 2);
 		}
+	}
+	
+	private String generateDividerLine(char lineChar, int lineLength, String lineContent)
+	{
+		int contentLength = lineContent.length();
+		String dividerLine = "";
+		int firstHalfLength;
+		int secondHalfLength;
+		
+		if(contentLength == 0)
+		{
+			for(int i = 0; i < lineLength; i++)
+			{
+				dividerLine += lineChar;
+			}
+		}
+		else
+		{
+			if(contentLength >= lineLength - 1)
+			{
+				dividerLine += lineChar + " " + lineContent + " " + lineChar;
+			}
+			else
+			{
+				firstHalfLength = (lineLength - contentLength - 2)/2;
+				secondHalfLength = (lineLength - contentLength - 2) - firstHalfLength;
+				
+				for(int i = 0; i < firstHalfLength; i++)
+				{
+					dividerLine += lineChar;
+				}
+				dividerLine += " " + lineContent + " ";
+				for(int i = 0; i < secondHalfLength; i++)
+				{
+					dividerLine += lineChar;
+				}
+			}
+		}
+		
+		return dividerLine;
 	}
 	
 	
