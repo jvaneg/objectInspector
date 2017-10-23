@@ -12,6 +12,6 @@ public class TestDriver
         int intarr[] = new int[3];
         
         
-        inspector.inspect(testObj, true);
+        inspector.inspect(intList, true);
     }
 }

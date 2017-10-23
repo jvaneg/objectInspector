@@ -32,7 +32,6 @@ public class Inspector
     private boolean recursive = false;
     private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> superQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
     private Queue<AbstractMap.SimpleImmutableEntry<Class, Object>> interfaceQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Class, Object>>();
-    private Queue<AbstractMap.SimpleImmutableEntry<Object, Object>> newobjectQueue = new LinkedList<AbstractMap.SimpleImmutableEntry<Object, Object>>();
     private Queue<Object> objectQueue = new LinkedList<Object>();
     private HashSet<Class> seenInterfaces = new HashSet<Class>();
     private HashSet<Object> seenObjects = new HashSet<Object>();
@@ -74,10 +73,8 @@ public class Inspector
 		String objectID;
 		AbstractMap.SimpleImmutableEntry<Class, Object> superPair;
 		AbstractMap.SimpleImmutableEntry<Class, Object> interfacePair;
-		AbstractMap.SimpleImmutableEntry<Object, Object> objectFoundInPair;
 		
 		objectQueue.add(obj);
-		newobjectQueue.add(new AbstractMap.SimpleImmutableEntry<>(obj, null));
 		
 		seenObjects.add(obj);
 		
@@ -97,6 +94,7 @@ public class Inspector
 			}
 			else
 			{
+			    seenInterfaces.clear();
 				printObjectInfo(classObj, obj, insertBefore);
 				System.out.println(insertBefore);
 				
@@ -123,8 +121,7 @@ public class Inspector
 																			("Interfaces of " + objectID)));
 					
 					indentIncrease();
-					seenInterfaces.clear();
-				
+					
 					while(!interfaceQueue.isEmpty())
 					{
 					    interfacePair = interfaceQueue.remove();
