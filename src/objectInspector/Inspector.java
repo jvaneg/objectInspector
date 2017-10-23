@@ -6,6 +6,20 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
+
+/**
+ * @author      Joel van Egmond
+ * Email:       joel.vanegmond@ucalgary.ca
+ * Student ID:  10102094
+ * Course:      CPSC 501
+ * Tutorial:    T01
+ * Assignment:  2
+ * Date:        22 OCT 2017
+ * 
+ * Purpose: A reflective object inspector that does a complete introspection of an object
+ * at runtime.
+ * 			
+ */
 public class Inspector
 {	
 	private static final int DIVIDER_LENGTH = 80;
@@ -24,12 +38,35 @@ public class Inspector
     private HashSet<Object> seenObjects = new HashSet<Object>();
     private String insertBefore = INDENT_STRING;
 	
+    
+    /**
+     * Default constructor for the Inspector class, doesn't do anything special
+     */
 	public Inspector()
 	{
 		//do NOTHING hahaha
 	}
 	
 	
+	/**
+	 * Performs complete inspection of an object at runtime.
+	 * This includes:
+	 * - Name of declaring class
+	 * - Name of the immediate superclass
+	 * - Name of the interfaces the class implements
+	 * - Methods the class declares
+	 * - Contructors the class declares
+	 * - Fields the class declares
+	 * - Current value of the fields
+	 * - The above information for every superclass up the inheritance tree
+	 * - The above information for every implemented interface up the inheritance tree
+	 * 
+	 * Additionally, if set to recursive mode, the inspector will also perform the full inspection
+	 * of every object declared as a field.
+	 * 
+	 * @param obj : the object to inspect
+	 * @param recursive : whether or not the run inspect in recursive mode
+	 */
 	public void inspect(Object obj, boolean recursive)
 	{
 	    this.recursive = recursive;
@@ -56,7 +93,7 @@ public class Inspector
 			
 			if(classObj.isArray())
 			{
-				printArrayInfo(classObj, obj, insertBefore);
+				System.out.println(printArrayInfo(classObj, obj, insertBefore));
 			}
 			else
 			{
@@ -103,6 +140,21 @@ public class Inspector
 		}
 	}
 	
+	
+	/**
+	 * Prints out the full set of information for an object, including:
+	 * - Name
+	 * - Immediate superclass
+	 * - Interfaces implemented
+	 * - Methods
+	 * - Constructors
+	 * - Fields
+	 * - Field values
+	 * - Divider lines
+	 * @param classObj : the class metaobject whose contents are being printed out
+	 * @param obj : the instantiated object whose values are being printed out
+	 * @param insertBefore : string to add at the start of every new line in the string
+	 */
 	private void printObjectInfo(Class classObj, Object obj, String insertBefore)
 	{
 		System.out.println(insertBefore + generateDividerLine(SUBDIVIDER_CHAR, SUBDIVIDER_LENGTH - insertBefore.length(), ""));
@@ -116,31 +168,71 @@ public class Inspector
         System.out.println(insertBefore + generateDividerLine(SUBDIVIDER_CHAR, SUBDIVIDER_LENGTH - insertBefore.length(), ""));
 	}
 	
-	private void printArrayInfo(Class classObj, Object arrayObj, String insertBefore)
+	
+	/**
+	 * Formats the array and its contents as a string. Used for standalone arrays that are not
+	 * fields of another object. 
+	 * @param classObj : The array's type as a class
+	 * @param arrayObj : the array itself as an Object
+	 * @param insertBefore : string to add at the start of every new line in the string
+	 */
+	private String printArrayInfo(Class classObj, Object arrayObj, String insertBefore)
 	{
-		System.out.print(insertBefore + "Array contents:\n" + insertBefore);
-		System.out.println("\t" + printArray(classObj, null, arrayObj));
+		String formattedString = "";
+		
+		formattedString += insertBefore + "Array contents:\n" + insertBefore;
+		formattedString += "\t" + printArray(classObj, null, arrayObj);
+		
+		//System.out.print(insertBefore + "Array contents:\n" + insertBefore);
+		//System.out.println("\t" + printArray(classObj, null, arrayObj));
+		
+		return formattedString;
 	}
 	
+	
+	/**
+	 * Generates the ObjectID of an object. This is the name for the object's class name followed
+	 * by a unique hex hashcode.
+	 * @param obj : the object whose ID is being generated
+	 * @return the object's ID as a string
+	 */
 	private String generateObjectID(Object obj)
 	{
 		Class classObj = obj.getClass();
 		return classObj.getSimpleName() + "@" + Integer.toHexString(obj.hashCode());	
 	}
 	
+	
+	/**
+	 * Increases the indent of insertBefore by one INDENT_STRING
+	 */
 	private void indentIncrease()
 	{
-		insertBefore += "| ";
+		insertBefore += INDENT_STRING;
 	}
 	
+	
+	/**
+	 * Decreases the indent of insertBefore by one INDENT_STRING, to a minimum of
+	 * one INDENT_STRING
+	 */
 	private void indentDecrease()
 	{
-		if(this.insertBefore.length() > 2)
+		if(insertBefore.length() > INDENT_STRING.length())
 		{
-			insertBefore = insertBefore.substring(0, insertBefore.length() - 2);
+			insertBefore = insertBefore.substring(0, insertBefore.length() - INDENT_STRING.length());
 		}
 	}
 	
+	
+	/**
+	 * Generates a divider line of a specified length, made of a specified character and containing
+	 * a specified string. Useful for aesthetic reasons, ensures the dividers will all be equal length etc.
+	 * @param lineChar : the character which makes up the bulk of the divider line
+	 * @param lineLength : the length the line should be (may be longer if line content string is longer)
+	 * @param lineContent : the string to insert into the divider
+	 * @return the line with inserted content as a string
+	 */
 	private String generateDividerLine(char lineChar, int lineLength, String lineContent)
 	{
 		int contentLength = lineContent.length();
@@ -182,11 +274,24 @@ public class Inspector
 	}
 	
 	
+	/**
+	 * Returns the class' name as a string
+	 * @param classObj : the class metaobject whose name is returned
+	 * @return the class' name as a string
+	 */
 	private String printName(Class classObj)
 	{	
 		return "Class name:  " + classObj.getSimpleName();
 	}
 	
+	
+	/**
+	 * Formats an object's superclass as a string.
+	 * Details: unique superclasses encountered are added to queue to be output later
+	 * @param classObj : the class metaobject whose superclass is being formatted as a string
+	 * @param obj : the instantiated object whose superclass are being formatted
+	 * @return : the superclass formatted as a string
+	 */
 	private String printSuperClass(Class classObj, Object obj)
 	{
 		String formattedString = "";
@@ -207,6 +312,14 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats the list of an object's implemented interfaces as a string.
+	 * Details: unique interfaces encountered are added to queue to be output later
+	 * @param classObj : the class metaobject whose interfaces are being formatted as a list string
+	 * @param obj : the instantiated object whose interfaces are being formatted
+	 * @return : the list of interfaces formatted as a string
+	 */
 	private String printInterfaces(Class classObj, Object obj)
 	{
 		String formattedString = "";
@@ -247,6 +360,13 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats all of an object's methods as a string.
+	 * @param classObj : the class metaobject of the object whose methods are being formatted
+	 * @param insertBefore : string to add at the start of every new line in the string
+	 * @return the object's methods as a formatted string
+	 */
 	private String printAllMethods(Class classObj, String insertBefore)
 	{
 		String formattedString = insertBefore;
@@ -280,6 +400,13 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats a single method as a string. Includes modifiers, return type, parameter types,
+	 * and exceptions. 
+	 * @param methodObj : : the method to be formatted
+	 * @return the method formatted as a string
+	 */
 	private String printMethod(Method methodObj)
 	{
 		String formattedString = "";
@@ -321,6 +448,13 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats all of an object's constructors as a string.
+	 * @param classObj : the class metaobject of the object whose constructors are being formatted
+	 * @param insertBefore : string to add at the start of every new line in the string
+	 * @return the object's constructors as a formatted string
+	 */
 	private String printAllConstructors(Class classObj, String insertBefore)
 	{
 		String formattedString = insertBefore;
@@ -354,6 +488,12 @@ public class Inspector
 		return formattedString;
 	}
 
+	
+	/**
+	 * Formats a single constructor as a string. Includes modifiers and parameter types.
+	 * @param constructorObj : the constructor to be formatted
+	 * @return the constructor formatted as a string
+	 */
 	private String printConstructor(Constructor constructorObj)
 	{
 		String formattedString = "";
@@ -369,7 +509,7 @@ public class Inspector
 		}
 		
 		constructorFullName = constructorObj.getName();
-		splitName = constructorFullName.split("\\.");	//TODO ask ta if i should be stripping package name
+		splitName = constructorFullName.split("\\.");	//strip the package name
 		formattedString += splitName[splitName.length - 1];
 		
 		formattedString += "(";
@@ -399,6 +539,13 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats all of an object's fields as a string.
+	 * @param classObj : the class metaobject of the object whose fields are being formatted
+	 * @param insertBefore : string to add at the start of every new line in the string
+	 * @return the object's fields as a formatted string
+	 */
 	private String printAllFields(Class classObj, String insertBefore)
 	{
 		String formattedString = insertBefore;
@@ -432,6 +579,12 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats a single field as a string. Includes modifiers and type.
+	 * @param fieldObj : the field to be formatted
+	 * @return the field formatted as a string
+	 */
 	private String printField(Field fieldObj)
 	{
 		String formattedString = "";
@@ -448,6 +601,14 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats all of an object's fields and their contents as a string.
+	 * @param classObj : the class metaobject of the object being formatted
+	 * @param obj : the object being formatted
+	 * @param insertBefore : string to add at the start of every new line in the string
+	 * @return the object's fields + contents as a formatted string
+	 */
 	private String printAllFieldValues(Class classObj, Object obj, String insertBefore)
 	{
 		String formattedString = insertBefore;
@@ -482,6 +643,14 @@ public class Inspector
 		return formattedString;
 	}
 	
+	
+	/**
+	 * Formats a field and its contents as a string. If the field contains an object will print
+	 * the object's ID, if an array will print the array contents.
+	 * @param fieldObj : the field to format
+	 * @param obj : the object containing the field
+	 * @return the field formatted as a string
+	 */
 	private String printFieldValue(Field fieldObj, Object obj)
 	{
 		String formattedString = "";
@@ -591,6 +760,14 @@ public class Inspector
 	}
 	
 	
+	/**
+	 * Formats an array's name, type, size, and contents as a string. If the array contains objects,
+	 * prints out their ID and adds them to the queue, if it contains other arrays, does the same.
+	 * @param objType : The array's type as a class
+	 * @param fieldObj : the array as a field if it is a field of another object, null if not
+	 * @param arrayObj : the array itself as an Object
+	 * @return the formatted array output string
+	 */
 	private String printArray(Class objType, Field fieldObj, Object arrayObj)
 	{
 	    String formattedString = "";
@@ -663,6 +840,12 @@ public class Inspector
 	}
 	
 	
+	/**
+	 * Determines whether or not the specified class object is a wrapper class
+	 * for a primitive
+	 * @param classObj : the class to check
+	 * @return whether or not the class is a primitive wrapper
+	 */
 	private boolean isPrimitiveWrapper(Class classObj)
 	{
 	    return( classObj == Boolean.class ||
@@ -675,13 +858,6 @@ public class Inspector
     	        classObj == Double.class || 
     	        classObj == Void.class );
 	}
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
